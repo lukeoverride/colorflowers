@@ -1,0 +1,142 @@
+package minesweeper;
+
+import java.util.*;
+
+import minesweeper.Advice;
+import minesweeper.Cell;
+import minesweeper.CellForDLV;
+import minesweeper.CoreFloweryMeadow;
+
+
+public class Intelligence {
+	
+	private ArrayList<CellForDLV> allCells;
+	private	ArrayList<CellForDLV> flowers;
+	private	ArrayList<CellForDLV> covered;
+	private	ArrayList<Advice> advices;
+	private CoreFloweryMeadow coreFloweryMeadow;
+	private int availableFlowers;
+	private int[][] matrix = new int[2][2];
+	
+	
+	public Intelligence(CoreFloweryMeadow coreFloweryMeadow) {
+		this.coreFloweryMeadow = coreFloweryMeadow;
+		
+	}
+	
+	
+	private void scanMeadow(boolean probability) {
+		
+		this.allCells = new ArrayList<CellForDLV>();
+		this.covered = new ArrayList<CellForDLV>();
+		this.advices = new ArrayList<Advice>();
+
+		if (!probability)
+			this.flowers = new ArrayList<CellForDLV>();
+		
+		for (int i = 0; i < this.coreFloweryMeadow.getHEIGHT(); i++){
+			for (int j = 0; j < this.coreFloweryMeadow.getWIDTH(); j++) {
+				Cell cell = this.coreFloweryMeadow.getCells().get(i).get(j);
+				
+				this.allCells.add(new CellForDLV(i, j));
+				if (!probability) {
+					if (cell.isBomb())
+						this.flowers.add(new CellForDLV(i, j));
+						}
+				if (cell.isCover())
+					this.covered.add(new CellForDLV(i, j));
+				if (cell.getHelp() > 0)
+					this.advices.add(new Advice(i, j, cell.getHelp()));
+				
+			}
+		}
+		
+	}
+	
+	public Set<CellOutput> createInputForDLV() {
+
+		scanMeadow(false);
+		
+//		ArrayList<CellForDLV> free = new ArrayList<CellForDLV>();
+		Set<CellOutput> free = new HashSet<CellOutput>();
+		
+		<#(resolve) IN = allCells::cella,flowers::fiore,covered::coperta,advices::suggerimento;
+					OUT = free::libera;
+					
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R+1, C=C1.
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R, C1=C+1.
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R+1, C1=C+1.
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R-1, C1=C+1.
+			adiacente(R,C,R1,C1) :- adiacente(R1,C1,R,C).
+
+
+			bombaSicura(R1,C1) :- suggerimento(R,C,X), contaAdiacentiCoperte(R,C,X), adiacente(R,C,R1,C1), coperta(R1,C1).
+			contaAdiacentiCoperte(R,C,X):- cella(R,C), #count{R1,C1:adiacente(R,C,R1,C1),coperta(R1,C1)}=X.
+
+			libera(R,C):- coperta(R,C), not bombaSicura(R,C), adiacente(R,C,R1,C1), suggerimento(R1,C1,X), contaAdiacentiBombeSicure(R1,C1,X).
+			contaAdiacentiBombeSicure(R,C,X) :-cella(R,C), #count{R1,C1:adiacente(R,C,R1,C1),bombaSicura(R1,C1)}=X.
+			
+		#>
+		
+		if_no_answerset { free = null;
+			return free;
+		}
+		
+		return free;
+	}
+	
+	public ArrayList<CellOutput> createCombinationsForProbability() {
+		
+		availableFlowers = this.coreFloweryMeadow.getAvailableFlowers();
+		
+		scanMeadow(true);
+		
+		Set<CellOutput> probabilityPos = new HashSet<CellOutput>();
+		ArrayList<CellOutput> totalCells = new ArrayList<CellOutput>();
+		int nAS = 0;
+		
+		<#(probability) IN = allCells::cella,availableFlowers::bombeTotali,covered::coperta,advices::suggerimento;
+					OUT = probabilityPos::bomba;
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R+1, C=C1.
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R, C1=C+1.
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R+1, C1=C+1.
+			adiacente(R,C,R1,C1) :- cella(R,C),cella(R1,C1), R1=R-1, C1=C+1.
+			adiacente(R,C,R1,C1) :- adiacente(R1,C1,R,C).
+			
+			bomba(X,Y)|nonBomba(X,Y) :- suggerimento(R,C,_), adiacente(X,Y,R,C), coperta(X,Y).
+			
+			number(0..11).
+			contaBombeAdiacentiSuggerimenti(X,Y,N) :- suggerimento(X,Y,_), number(N), #count{R,C:adiacente(X,Y,R,C),bomba(R,C)}=N.
+			:- suggerimento(X,Y,N), contaBombeAdiacentiSuggerimenti(X,Y,M), not N=M.
+			:- bombeTotali(T), #count{X,Y:bomba(X,Y)}>T.			
+		#>
+		
+		for_each_answerset {
+			
+			Iterator<CellOutput> iter = probabilityPos.iterator();
+		while(iter.hasNext()) {
+			CellOutput cell = iter.next();
+			totalCells.add(cell);
+			System.out.print(cell.getY());
+			System.out.println(cell.getX());
+			
+			}
+			nAS++;
+			System.out.println("A.S. number "+nAS);
+			System.out.println("_________________________");
+		}
+		
+		CellOutput numberOfAS = new CellOutput();
+		numberOfAS.setY("-1");
+		numberOfAS.setX(Integer.toString(nAS));
+		totalCells.add(numberOfAS);
+		return totalCells;
+	}
+	
+	public CoreFloweryMeadow getCoreFloweryMeadow() {
+		return coreFloweryMeadow;
+	}
+	
+	
+
+}

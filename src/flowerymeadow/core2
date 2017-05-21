@@ -1,0 +1,138 @@
+package minesweeper;
+
+import java.util.ArrayList;
+
+public class CoreFloweryMeadow {
+
+
+	private final int WIDTH;
+	private final int HEIGHT;
+//	private Cell[][] cells;
+	private ArrayList<ArrayList<Cell>> cells;
+
+	public CoreFloweryMeadow(int width, int length) {
+		this.WIDTH = width;
+		this.HEIGHT = length;
+		
+		cells = new ArrayList<ArrayList<Cell>>();
+		
+		for (int i = 0; i < HEIGHT; i++)
+			cells.add(i, new ArrayList<Cell>());
+		
+		for (int i = 0; i < HEIGHT; i++)
+			for (int j = 0; j < WIDTH; j++)
+				cells.get(i).add(new Cell(i, j));
+		
+//		for (int i = 0; i < HEIGHT; i++)
+//			for (int j = 0; j < WIDTH; j++)
+//				System.out.println(cells.get(i).get(j));
+		
+		insertBombs();
+	}
+
+	private void insertBombs() {
+		
+//		cells[2][2].setBomb(true);
+//		cells[1][4].setBomb(true);
+//		cells[5][1].setBomb(true);
+//		cells[8][2].setBomb(true);
+		
+		cells.get(2).get(2).setBomb(true);
+		cells.get(1).get(4).setBomb(true);
+		cells.get(5).get(1).setBomb(true);
+		cells.get(8).get(2).setBomb(true);
+	}
+
+//	public Cell[][] getCells() {
+//		return cells;
+//	}
+	
+	public ArrayList<ArrayList<Cell>> getCells() {
+		return cells;
+	}
+	
+	public int countAdjacentFlowers(int y, int x) {
+		int count = 0;
+		System.out.println(y+" "+x);
+		if (y > 0 && cells.get(y-1).get(x).isBomb()) //up
+			count++;
+		if (y > 0 && x > 0 && cells.get(y-1).get(x-1).isBomb()) //left-up
+			count++;
+		if (y > 0 && x < WIDTH-1 && cells.get(y-1).get(x+1).isBomb()) //up-right
+			count++;
+		if (x < WIDTH-1 && cells.get(y).get(x+1).isBomb()) //right
+			count++;
+		if (x > 0 && cells.get(y).get(x-1).isBomb()) //left
+			count++;
+		if (x > 0 && y < HEIGHT-1 && cells.get(y+1).get(x-1).isBomb()) //left-down
+			count++;
+		if (y < HEIGHT-1 && cells.get(y+1).get(x).isBomb()) //down
+			count++;
+		if (x < WIDTH-1 && y < HEIGHT-1 && cells.get(y+1).get(x+1).isBomb()) //down-right
+			count++;
+
+		System.out.println(count);
+		return count;
+
+	}
+
+
+
+	public void discoverCells(int y, int x) {
+		if (y >= WIDTH || x >= HEIGHT || x < 0 || y <0 || !cells.get(y).get(x).isCover())
+			return;
+
+		cells.get(y).get(x).setCover(false);
+		int help = countAdjacentFlowers(y, x);
+		cells.get(y).get(x).setHelp(help);
+		if (help != 0)
+			return;
+
+		discoverCells(y-1, x);
+		discoverCells(y+1, x);
+		discoverCells(y, x+1);
+		discoverCells(y, x-1);
+		discoverCells(y-1, x-1);
+		discoverCells(y+1, x-1);
+		discoverCells(y-1, x+1);
+		discoverCells(y+1, x+1);
+	}
+
+	public void createInputForDLV() {
+
+		ArrayList<CellForDLV> allCells = new ArrayList<CellForDLV>();
+		ArrayList<CellForDLV> flowers = new ArrayList<CellForDLV>();
+		ArrayList<CellForDLV> covered = new ArrayList<CellForDLV>();
+		ArrayList<Advice> advices = new ArrayList<Advice>();
+		
+		for (int i = 0; i < this.HEIGHT; i++){
+			for (int j = 0; j < this.WIDTH; j++) {
+				Cell cell = cells.get(i).get(j);
+				
+				allCells.add(new CellForDLV(i, j));
+				if (cell.isBomb())
+					flowers.add(new CellForDLV(i, j));
+				if (cell.isCover())
+					covered.add(new CellForDLV(i, j));
+				if (cell.getHelp() > 0)
+					advices.add(new Advice(i, j, cell.getHelp()));
+				
+			}
+		}
+		
+		
+		
+		
+		
+	
+		//TODO creare programma DLV mandando in input le quattro strutture
+		
+		for (CellForDLV celz: covered)
+			System.out.println(celz.getY()+" "+celz.getX()+" è coperta");
+		for (CellForDLV flo: flowers)
+			System.out.println(flo.getY()+" "+flo.getX()+" è un fiore");
+		for (Advice adv: advices)
+			System.out.println(adv.getX()+" "+adv.getY()+" "+adv.getHelp());
+	}
+
+}

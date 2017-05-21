@@ -1,0 +1,109 @@
+package minesweeper;
+
+import java.util.*;
+import minesweeper.Advice;
+import minesweeper.Cell;
+import minesweeper.CellForDLV;
+import minesweeper.CoreFloweryMeadow;
+
+public  class Intelligence{
+
+public Intelligence(CoreFloweryMeadow coreFloweryMeadow){
+ this .coreFloweryMeadow=coreFloweryMeadow;
+}
+private CoreFloweryMeadow coreFloweryMeadow;
+public Set<CellOutput> createInputForDLV(){
+ArrayList<CellForDLV> allCells= new ArrayList<CellForDLV>();
+ArrayList<CellForDLV> flowers= new ArrayList<CellForDLV>();
+ArrayList<CellForDLV> covered= new ArrayList<CellForDLV>();
+ArrayList<Advice> advices= new ArrayList<Advice>();
+for(int i= 0 ;i< this .coreFloweryMeadow.getHEIGHT();i++)
+{
+for(int j= 0 ;j< this .coreFloweryMeadow.getWIDTH();j++)
+{
+Cell cell= this .coreFloweryMeadow.getCells().get(i).get(j);
+allCells.add( new CellForDLV(i,j));
+if(cell.isBomb())
+flowers.add( new CellForDLV(i,j));
+if(cell.isCover())
+covered.add( new CellForDLV(i,j));
+if(cell.getHelp()> 0 )
+advices.add( new Advice(i,j,cell.getHelp()));
+}
+}
+Set<CellOutput> free= new HashSet<CellOutput>();
+
+	// ---- START - startProgram ---- 
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Creation resolve JDLV module.");
+it.unical.mat.wrapper.DLVInputProgram _JDLV_PROGRAM_resolve=new it.unical.mat.wrapper.DLVInputProgramImpl();
+_JDLV_PROGRAM_resolve.cleanText();
+java.lang.StringBuffer _JDLV_PROGRAM_BUFFER_resolve=new java.lang.StringBuffer();
+it.unical.mat.wrapper.DLVInvocation _JDLV_INVOCATION_resolve;
+
+	// ---- END - startProgram ---- 
+
+	// ---- START - addInMapping ---- 
+_JDLV_PROGRAM_resolve.addText(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(allCells,"cella"));
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Add in-mapping 'allCells::cella' in module resolve:"+ it.unical.mat.jdlv.program.JDLV_Logger.getInstance().getPrettyCode(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(allCells,"cella"), 0));
+_JDLV_PROGRAM_resolve.addText(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(flowers,"fiore"));
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Add in-mapping 'flowers::fiore' in module resolve:"+ it.unical.mat.jdlv.program.JDLV_Logger.getInstance().getPrettyCode(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(flowers,"fiore"), 0));
+_JDLV_PROGRAM_resolve.addText(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(covered,"coperta"));
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Add in-mapping 'covered::coperta' in module resolve:"+ it.unical.mat.jdlv.program.JDLV_Logger.getInstance().getPrettyCode(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(covered,"coperta"), 0));
+_JDLV_PROGRAM_resolve.addText(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(advices,"suggerimento"));
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Add in-mapping 'advices::suggerimento' in module resolve:"+ it.unical.mat.jdlv.program.JDLV_Logger.getInstance().getPrettyCode(it.unical.mat.jdlv.program.TypeSolver.getNameTranslation(advices,"suggerimento"), 0));
+
+	// ---- END - addInMapping ---- 
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Add out-mapping 'free::libera' in module resolve.");
+
+	// ---- START - prepareJDLVCall ---- 
+try{
+
+_JDLV_INVOCATION_resolve=it.unical.mat.wrapper.DLVWrapper.getInstance().createInvocation(it.unical.mat.jdlv.util.JdlvProperties.getInstance().getDlvExecutablePath());
+_JDLV_PROGRAM_resolve.addText(_JDLV_PROGRAM_BUFFER_resolve.toString());
+_JDLV_PROGRAM_resolve.addText("adiacente(R, C, R1, C1) :- cella(R, C), cella(R1, C1), R1 = R + 1, C = C1."+'\n');
+_JDLV_PROGRAM_resolve.addText("adiacente(R, C, R1, C1) :- cella(R, C), cella(R1, C1), R1 = R, C1 = C + 1."+'\n');
+_JDLV_PROGRAM_resolve.addText("adiacente(R, C, R1, C1) :- cella(R, C), cella(R1, C1), R1 = R + 1, C1 = C + 1."+'\n');
+_JDLV_PROGRAM_resolve.addText("adiacente(R, C, R1, C1) :- cella(R, C), cella(R1, C1), R1 = R - 1, C1 = C + 1."+'\n');
+_JDLV_PROGRAM_resolve.addText("adiacente(R, C, R1, C1) :- adiacente(R1, C1, R, C)."+'\n');
+_JDLV_PROGRAM_resolve.addText("bombaSicura(R1, C1) :- suggerimento(R, C, X), contaAdiacentiCoperte(R, C, X), adiacente(R, C, R1, C1), coperta(R1, C1)."+'\n');
+_JDLV_PROGRAM_resolve.addText("contaAdiacentiCoperte(R, C, X) :- cella(R, C), #count{R1,C1 : adiacente(R, C, R1, C1), coperta(R1, C1)} = X."+'\n');
+_JDLV_PROGRAM_resolve.addText("libera(R, C) :- coperta(R, C), not bombaSicura(R, C), adiacente(R, C, R1, C1), suggerimento(R1, C1, X), contaAdiacentiBombeSicure(R1, C1, X)."+'\n');
+_JDLV_PROGRAM_resolve.addText("contaAdiacentiBombeSicure(R, C, X) :- cella(R, C), #count{R1,C1 : adiacente(R, C, R1, C1), bombaSicura(R1, C1)} = X."+'\n');
+_JDLV_PROGRAM_resolve.getFiles().clear();
+_JDLV_INVOCATION_resolve.setNumberOfModels(1);
+_JDLV_PROGRAM_BUFFER_resolve.append("");
+_JDLV_INVOCATION_resolve.setInputProgram(_JDLV_PROGRAM_resolve);
+it.unical.mat.wrapper.ModelBufferedHandler _BUFFERED_HANDLER_resolve=new it.unical.mat.wrapper.ModelBufferedHandler(_JDLV_INVOCATION_resolve);
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Start execution resolve program: executablePath='"+it.unical.mat.jdlv.util.JdlvProperties.getInstance().getDlvExecutablePath()+"', options='"+_JDLV_INVOCATION_resolve.getOptionsString()+"'"+'\n'+"Code execution: "+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().getPrettyCode(_JDLV_INVOCATION_resolve.getInputProgram().getCompleteText(),0));
+_JDLV_INVOCATION_resolve.run();
+while(_BUFFERED_HANDLER_resolve.hasMoreModels()){
+it.unical.mat.wrapper.Model _temporary_JDLV_MODELresolve=_BUFFERED_HANDLER_resolve.nextModel();
+it.unical.mat.jdlv.program.TypeSolver.loadPredicate(free, "libera",_temporary_JDLV_MODELresolve,CellOutput.class);
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logInfoMessage("Process new answer_set"+ '\n' + "Results:"+ '\n'+ "free " + free.size() + " elements"+ '\n' + it.unical.mat.jdlv.program.JDLV_Logger.getInstance().getPrettyObject(free,0));
+}
+if(_JDLV_INVOCATION_resolve.haveModel()==false){
+free= null ;
+System.out.print( "Nessuna cella da suggerire" );
+return free;
+}
+if(!_JDLV_INVOCATION_resolve.getErrors().isEmpty()){
+throw new java.lang.RuntimeException(_JDLV_INVOCATION_resolve.getErrors().get(0).getText());
+}
+}
+catch(java.lang.Throwable _JDLV_EXCEPTION_resolve){
+it.unical.mat.jdlv.program.JDLV_Logger.getInstance().logErrorMessage(_JDLV_EXCEPTION_resolve.getMessage());
+}
+_JDLV_PROGRAM_resolve.cleanText();
+
+	// ---- END - prepareJDLVCall ---- 
+Iterator<CellOutput> iter=free.iterator();
+while(iter.hasNext())
+{
+CellOutput cell=iter.next();
+System.out.print(cell.getY());
+System.out.println(cell.getX());
+}
+return free;
+}
+}
+

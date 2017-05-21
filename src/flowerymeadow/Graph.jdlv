@@ -1,0 +1,66 @@
+package minesweeper;
+
+import java.util.*;
+public class Graph{
+		
+	private List<Arc> arcz = new ArrayList<Arc>();
+	private Set<String> nodes = new HashSet<String>();
+	private int count = 2;
+	
+		
+	public void addNode(String id) {
+		nodes.add(id);
+	}
+		
+	
+	public void addArc(String from, String to) {
+		arcz.add(new Arc(from,to));
+	}
+		
+	public Set<Colored> compute3Coloring() {
+		
+		addNode("firenze");
+		addNode("cittanova");
+		addNode("reggio");
+		addNode("catania");
+		addNode("roma");
+		addNode("genova");
+		addArc("firenze","cittanova");
+		addArc("firenze","reggio");
+		addArc("cittanova","reggio");
+		addArc("cittanova","catania");
+		addArc("reggio","catania");
+		addArc("catania","roma");
+		addArc("catania","genova");
+		addArc("roma","genova");
+		
+		Set<Colored> res = new HashSet<Colored>();
+		<#(inputProgram) IN=arcz::arc,nodes::node,count::conta; OUT = res::col;
+			col(X,red) v col(X,green) v col(X,blue):- node(X).
+			:- col(X,C), col(Y,C), arc(X,Y).
+			cont(X) :- conta(X).
+		#>
+
+		if_no_answerset { res = null;
+			System.out.print("E' nullo");
+		}
+		
+		return res;
+	}
+	
+	public static void main(String[] args) {
+		System.out.println("ciao");
+		Graph graph = new Graph();
+		
+		
+		Set<Colored> risultato = graph.compute3Coloring();
+		Iterator<Colored> iter = risultato.iterator();
+		while(iter.hasNext()) {
+			Colored colored = iter.next();
+			System.out.print(colored.node+" ");
+			System.out.println(colored.color);
+			}
+		
+		
+	}
+}
